@@ -12189,7 +12189,7 @@
     "pt": "Mago Seráfico"
    },
    "kind": "monster",
-   "model": "MONSTER_MODEL_DEATH_ANGEL",
+   "model": "MONSTER_MODEL_DEATH_ANGEL_3",
    "soundSet": "Death Angel",
    "scale": 1.0,
    "hiddenMesh": 0,
@@ -12209,7 +12209,7 @@
     "pt": "O Arcanjo Escarlate"
    },
    "kind": "monster",
-   "model": "MONSTER_MODEL_DEATH_ANGEL",
+   "model": "MONSTER_MODEL_DEATH_ANGEL_3",
    "soundSet": "Death Angel",
    "scale": 1.6,
    "hiddenMesh": 0,
