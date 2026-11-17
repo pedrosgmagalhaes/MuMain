@@ -191,6 +191,15 @@ void CLoginWin::SetPosition(int x, int y)
 		{
 			panel->SetProperty("left", std::to_string(x) + "px");
 			panel->SetProperty("top", std::to_string(y) + "px");
+
+			// Layout probe (C32): the requested origin and what the document really did with it.
+			mu::log::Get("ui")->info("login panel: requested {},{} -> element {:.1f},{:.1f} {:.1f}x{:.1f}",
+			                         x, y, panel->GetAbsoluteLeft(), panel->GetAbsoluteTop(),
+			                         panel->GetClientWidth(), panel->GetClientHeight());
+		}
+		else
+		{
+			mu::log::Get("ui")->warn("login panel: document has no #panel element");
 		}
 	}
 }
