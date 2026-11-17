@@ -1,5 +1,6 @@
 
 #include "stdafx.h"
+#include "Core/Utilities/Log/MuLogger.h"
 #include <algorithm>
 #include "I18N/All.h"
 
@@ -753,6 +754,21 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
     syncText(&MainFrameRmlModel::skillSlot3Icon, "skill_slot_3_icon", g_pSkillList->GetHotKeySlotIconDecorator(3));
     syncText(&MainFrameRmlModel::skillSlot4Icon, "skill_slot_4_icon", g_pSkillList->GetHotKeySlotIconDecorator(4));
     syncText(&MainFrameRmlModel::currentSkillIcon, "current_skill_icon", g_pSkillList->GetCurrentSkillIconDecorator());
+
+    // Icon probe (C32): the decorator each hotkey slot pushes, once per launch. A flat yellow cell is
+    // an atlas cell, so this names the sprite (atlas and position) instead of guessing at the cause.
+    {
+        static bool logged = false;
+        if (!logged)
+        {
+            logged = true;
+            mu::log::Get("ui")->info(
+                "skill icons: slots [{}, {}, {}, {}, {}] current [{}]",
+                g_pSkillList->GetHotKeySlotIconDecorator(0), g_pSkillList->GetHotKeySlotIconDecorator(1),
+                g_pSkillList->GetHotKeySlotIconDecorator(2), g_pSkillList->GetHotKeySlotIconDecorator(3),
+                g_pSkillList->GetHotKeySlotIconDecorator(4), g_pSkillList->GetCurrentSkillIconDecorator());
+        }
+    }
     syncText(&MainFrameRmlModel::currentSkillHotkey, "current_skill_hotkey",
              CharacterAttribute->SkillNumber > 0 ? hotkeyText(g_pSkillList->GetSkillHotKeyNumber(Hero->CurrentSkill))
                                                  : Rml::String());
