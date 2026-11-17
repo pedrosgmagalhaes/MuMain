@@ -48,7 +48,7 @@
 
 namespace UI::Chat
 {
-void CheckChatText(wchar_t* Text)
+void CheckChatText(const wchar_t* Text)
 {
     CHARACTER* c = Hero;
     OBJECT* o = &c->Object;
