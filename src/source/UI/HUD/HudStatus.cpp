@@ -8,6 +8,7 @@
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/RmlBridge/RmlSyncField.h"
 #include "UI/Placement/WindowPlacement.h"
+#include "Engine/Object/ZzzCharacter.h"
 #include "World/MapInfra/MapManager.h"
 #include "UI/Scaling/UITransform.h"
 
