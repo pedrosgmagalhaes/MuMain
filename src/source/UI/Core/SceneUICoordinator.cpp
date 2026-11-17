@@ -144,6 +144,14 @@ void CSceneUICoordinator::RepositionSceneUI()
 
 void CSceneUICoordinator::RepositionLoginWindows()
 {
+    // A size of zero means the window has not been sized yet (a fullscreen start reports its real
+    // size only once the OS resize arrives). Centring on it puts every panel at a negative origin,
+    // where nothing is drawn; the resize that follows repositions them.
+    if (WindowWidth == 0 || WindowHeight == 0)
+    {
+        return;
+    }
+
     constexpr int messageWidth = 352;
     constexpr int messageHeight = 113;
     constexpr int barMargin = 30;
@@ -163,6 +171,11 @@ void CSceneUICoordinator::RepositionLoginWindows()
 
 void CSceneUICoordinator::RepositionCharacterWindows()
 {
+    if (WindowWidth == 0 || WindowHeight == 0)
+    {
+        return;
+    }
+
     constexpr int messageWidth = 352;
     constexpr int messageHeight = 113;
     constexpr int noticeMargin = 10;
