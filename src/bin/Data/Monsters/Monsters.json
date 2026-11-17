@@ -12150,7 +12150,7 @@
    },
    "kind": "monster",
    "model": "MONSTER_MODEL_LIZARD_WARRIOR",
-   "soundSet": "Lizard Warrior",
+   "soundSet": "Lizard King",
    "scale": 1.0,
    "hiddenMesh": 0,
    "numbers": [
@@ -12170,7 +12170,7 @@
    },
    "kind": "monster",
    "model": "MONSTER_MODEL_DARK_ELF",
-   "soundSet": "Dark Elf",
+   "soundSet": "Elf Lala",
    "scale": 1.0,
    "hiddenMesh": 0,
    "numbers": [
