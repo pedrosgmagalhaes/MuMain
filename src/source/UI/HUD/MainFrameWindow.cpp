@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "Core/Utilities/Log/MuLogger.h"
 #include <algorithm>
+#include <string>
 #include "I18N/All.h"
 
 #include "UI/HUD/MainFrameWindow.h"	// self
@@ -792,6 +793,9 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
     syncText(&MainFrameRmlModel::itemSlot3Count, "item_slot_3_count", stackCountText(m_ItemHotKey.GetSlotItemCount(3)));
     syncFloat(&MainFrameRmlModel::currentSkillCooldown, "current_skill_cooldown", g_pSkillList->GetCurrentSkillCooldownFraction());
 
+    // Set once per grid opening by the probe below; reset when the grid closes.
+    static bool gridProbeLogged = false;
+
     syncBool(&MainFrameRmlModel::skillGridOpen, "skill_grid_open", g_pSkillList->IsSkillGridOpen());
     syncBool(&MainFrameRmlModel::skillListUp, "skill_list_up", g_pSkillList->IsSkillListUp());
 
@@ -803,6 +807,32 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
         model.petSkillCells = g_pSkillList->GetPetSnapshot();
         m_RmlView.MarkDirty("skill_grid_cells");
         m_RmlView.MarkDirty("pet_skill_cells");
+
+        // Grid probe (C32): once per opening, each cell's skill index with the decorator it draws, plus
+        // the hotkey numbers of the icon row. A flat yellow square is an atlas cell, so this names it.
+        if (!gridProbeLogged)
+        {
+            gridProbeLogged = true;
+            std::string cells;
+            for (const auto& cell : model.skillGridCells)
+            {
+                if (!cells.empty())
+                {
+                    cells += ", ";
+                }
+
+                cells += std::to_string(cell.skillIndex) + ":" + cell.icon;
+            }
+
+            mu::log::Get("ui")->info("skill grid: cells [{}] hotkeys [{}, {}, {}, {}, {}]", cells,
+                                     g_pSkillList->GetHotKeySlotNumber(0), g_pSkillList->GetHotKeySlotNumber(1),
+                                     g_pSkillList->GetHotKeySlotNumber(2), g_pSkillList->GetHotKeySlotNumber(3),
+                                     g_pSkillList->GetHotKeySlotNumber(4));
+        }
+    }
+    else
+    {
+        gridProbeLogged = false;
     }
 
     // Shared skill tooltip: one hover target queued at a time (QueueTooltip()/OnUnhover()).
