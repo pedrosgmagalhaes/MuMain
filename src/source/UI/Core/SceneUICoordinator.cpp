@@ -14,6 +14,7 @@
 #include "Character/CharInfoBalloonMng.h"
 #include "UI/Windows/LoginMainWin.h"
 #include "Core/Globals/_enum.h"
+#include "Core/Utilities/Log/MuLogger.h"
 #include "Core/Input/Input.h"
 #include "Audio/DSPlaySound.h"
 #include "Render/Textures/ZzzOpenglUtil.h"

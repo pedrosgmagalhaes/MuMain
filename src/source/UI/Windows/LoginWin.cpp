@@ -16,6 +16,7 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "Network/Reconnect/LoginSceneReconnect.h"
+#include "Core/Utilities/Log/MuLogger.h"
 #include "Network/Reconnect/ReconnectManager.h"
 #include "Scenes/SceneCore.h"
 #include "I18N/All.h"
