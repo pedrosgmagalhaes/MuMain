@@ -1,0 +1,178 @@
+/* Tema taverna para CMiniMap — fork de themes/modern/mini_map.rcss.
+
+   O que o tema NÃO faz: o mapa em si. A imagem vem do jogo, por mapa, no <img class="map">
+   (data-attr-src="map_source" → Data/World<N>/mini_map.OZT), posicionada por matriz que o C++
+   calcula. Nenhuma regra daqui toca nisso: trocar moldura, seta e balão vale para os 20 mapas
+   de uma vez e não mexe em arquivo de mapa.
+
+   O que muda em relação ao modern (só pele, mesma geometria):
+   - moldura: sai o sprite de linha/canto e entra barra de latão + canto de latão, cor chapada;
+   - seta do herói: 12px -> 20px, com anel de pergaminho em volta (contraste sobre qualquer terreno);
+   - balão do marcador: pergaminho com borda de madeira, texto no corpo do tema;
+   - fundo: mesmo escurecimento do original (0.85), um tom mais quente.
+
+   Geometria travada de propósito: .screen 640x480 escalado, .map 800x800, .hero centrado em
+   (331, 236) — o centro do herói é o ponto de referência do mapa (MiniMapLayout.h). */
+
+body { pointer-events: none; }
+
+.clip {
+	position: absolute;
+	overflow: hidden;
+	clip: always;
+	pointer-events: none;
+}
+.world {
+	position: absolute;
+	width: 0;
+	height: 0;
+	pointer-events: none;
+}
+
+/* The screen's stretch: reference px, scaled from the window's top-left. */
+.screen {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 640px;
+	height: 480px;
+	transform-origin: left top;
+	transform: scale(var(--overlay-scale-x), var(--overlay-scale-y));
+	pointer-events: none;
+}
+
+/* O escurecimento do original (alpha 216), num preto morno de taverna. */
+.dim { position: absolute; left: 0; top: 0; width: 640px; height: 430px; background-color: #17110ad8; }
+
+/* O mapa do mundo, 800 px, colocado pela matriz do C++. */
+.map {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 800px;
+	height: 800px;
+	transform-origin: left top;
+	pointer-events: none;
+}
+
+/* Marcadores: mantêm o sprite do jogo (a forma é informação: portão x NPC), só ganham aro. */
+.marker {
+	position: absolute;
+	left: 0;
+	top: 0;
+	transform-origin: left top;
+	decorator: image(mm-npc);
+	pointer-events: none;
+}
+.marker.portal { decorator: image(mm-portal); }
+
+/* A seta do herói: 20px (era 12), centrada no mesmo ponto (331, 236), com anel de pergaminho.
+   O anel é a borda do próprio elemento, então o sprite continua sendo o conteúdo. */
+.hero {
+	position: absolute;
+	left: 321px;
+	top: 226px;
+	width: 20px;
+	height: 20px;
+	decorator: image(mm-hero);
+	border: 2px solid token(tavern-brass-hair);
+	border-radius: 12px;
+	background-color: #00000040;
+}
+
+/* Moldura: barra de latão no lugar do sprite de linha. */
+.edge-top, .edge-bottom { position: absolute; width: 35px; height: 6px; background-color: token(tavern-brass-hair); }
+.edge-top { top: 0; background-color: token(tavern-brass-hair); }
+.edge-bottom { top: 424px; background-color: token(tavern-brass-hair); }
+
+/* The side tiles, turned a quarter around their centres by their matrix. */
+.edge-side {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 41.7px;
+	height: 8px;
+	transform-origin: left top;
+	background-color: token(tavern-brass-hair);
+	pointer-events: none;
+}
+
+/* Cantos: quadrado de latão com miolo escuro, no lugar do sprite de canto. */
+.corner {
+	position: absolute;
+	width: 35px;
+	height: 35px;
+	background-color: token(tavern-brass-hair);
+	border: 3px solid token(metal-outer);
+}
+.corner-tl { left: 0; top: 0; }
+.corner-tr { left: 605px; top: 0; }
+.corner-bl { left: 0; top: 395px; }
+.corner-br { left: 605px; top: 395px; }
+
+/* A área que o original tomava para o mouse. */
+.hit { position: absolute; left: 0; top: 0; width: 640px; height: 430px; pointer-events: auto; }
+
+/* Botão de fechar: mantém o sprite (a forma é reconhecível) com aro de latão. */
+.close {
+	position: absolute;
+	left: 613px;
+	top: 3px;
+	width: 30px;
+	height: 25px;
+	decorator: image(mm-close);
+	background-color: token(tavern-brass-hair);
+	border: 2px solid token(metal-outer);
+	pointer-events: auto;
+	cursor: pointer;
+}
+
+/* O nome do marcador sob o mouse: pergaminho, não caixa preta. */
+.hint {
+	position: absolute;
+	background-color: token(surface-panel);
+	border: 2px solid token(tavern-brass-hair);
+	pointer-events: none;
+}
+.hint-text {
+	display: block;
+	width: 100%;
+	font-family: "token(font-body)";
+	color: token(text-primary);
+	text-align: center;
+	white-space: nowrap;
+}
+
+/* As 25 telhas de cima e de baixo: posições fixas, como no modern (geometria, não pele). */
+.edges { position: static; }
+.edges .edge-top:nth-child(1), .edges .edge-bottom:nth-child(1) { left: 0px; }
+.edges .edge-top:nth-child(2), .edges .edge-bottom:nth-child(2) { left: 35px; }
+.edges .edge-top:nth-child(3), .edges .edge-bottom:nth-child(3) { left: 70px; }
+.edges .edge-top:nth-child(4), .edges .edge-bottom:nth-child(4) { left: 105px; }
+.edges .edge-top:nth-child(5), .edges .edge-bottom:nth-child(5) { left: 140px; }
+.edges .edge-top:nth-child(6), .edges .edge-bottom:nth-child(6) { left: 175px; }
+.edges .edge-top:nth-child(7), .edges .edge-bottom:nth-child(7) { left: 210px; }
+.edges .edge-top:nth-child(8), .edges .edge-bottom:nth-child(8) { left: 245px; }
+.edges .edge-top:nth-child(9), .edges .edge-bottom:nth-child(9) { left: 280px; }
+.edges .edge-top:nth-child(10), .edges .edge-bottom:nth-child(10) { left: 315px; }
+.edges .edge-top:nth-child(11), .edges .edge-bottom:nth-child(11) { left: 350px; }
+.edges .edge-top:nth-child(12), .edges .edge-bottom:nth-child(12) { left: 385px; }
+.edges .edge-top:nth-child(13), .edges .edge-bottom:nth-child(13) { left: 420px; }
+.edges .edge-top:nth-child(14), .edges .edge-bottom:nth-child(14) { left: 455px; }
+.edges .edge-top:nth-child(15), .edges .edge-bottom:nth-child(15) { left: 490px; }
+.edges .edge-top:nth-child(16), .edges .edge-bottom:nth-child(16) { left: 525px; }
+.edges .edge-top:nth-child(17), .edges .edge-bottom:nth-child(17) { left: 560px; }
+.edges .edge-top:nth-child(18), .edges .edge-bottom:nth-child(18) { left: 595px; }
+.edges .edge-top:nth-child(19), .edges .edge-bottom:nth-child(19) { left: 630px; }
+.edges .edge-top:nth-child(20), .edges .edge-bottom:nth-child(20) { left: 665px; }
+.edges .edge-top:nth-child(21), .edges .edge-bottom:nth-child(21) { left: 700px; }
+.edges .edge-top:nth-child(22), .edges .edge-bottom:nth-child(22) { left: 735px; }
+.edges .edge-top:nth-child(23), .edges .edge-bottom:nth-child(23) { left: 770px; }
+.edges .edge-top:nth-child(24), .edges .edge-bottom:nth-child(24) { left: 805px; }
+.edges .edge-top:nth-child(25), .edges .edge-bottom:nth-child(25) { left: 840px; }
+
+/* Sprites que este tema continua usando: os do jogo (marcador, portão, seta, fechar). */
+@spritesheet mm-hero-sheet { src: "../../../mini_map_ui_cha.tga"; mm-hero: 0px 0px 17.5px 17.5px; }
+@spritesheet mm-npc-sheet { src: "../../../mini_map_ui_npc.tga"; mm-npc: 0px 0px 17.5px 17.5px; }
+@spritesheet mm-portal-sheet { src: "../../../mini_map_ui_portal.tga"; mm-portal: 0px 0px 17.5px 17.5px; }
+@spritesheet mm-close-sheet { src: "../../../mini_map_ui_cancel.tga"; mm-close: 0px 0px 36px 29px; }

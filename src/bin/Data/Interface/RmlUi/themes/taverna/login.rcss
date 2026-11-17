@@ -1,0 +1,331 @@
+/* Login da taverna. Este arquivo substitui themes/modern/login.rcss por inteiro para esta janela
+   (um .rcss sobrescrito substitui o do ancestral; regras nao se somam), entao ele repete a
+   geometria que o modern posicionava e troca o material: tabua de madeira, latao, pergaminho.
+
+   O que NAO e reescrito aqui vem do base.rcss herdado do modern: .btn/.checkbox-box/.text-field
+   como primitivas, e o reset `body { pointer-events: none; }`. Por isso as classes .btn e
+   .text-field continuam no RML -- elas dao estado, cursor e caixa; a cor vem das regras locais
+   abaixo, que carregam depois.
+
+   Notas do motor: rgba() e 0-255 no alfa; nao existe ::before/::after nem content:; border-radius
+   nao aceita %; box-shadow (inset/outset, multiplo) funciona; transform: rotate() funciona. */
+
+body {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	pointer-events: none;
+	font-family: "token(font-body)";
+}
+
+/* Tabua. Fundo de madeira com veio vertical (duas gradientes: claro em cima, escuro embaixo) e
+   brilho de lanterna por fora da borda -- o box-shadow outset e o que faz o painel parecer
+   iluminado pela cena 3D atras, sem precisar de imagem.
+
+   Sombra de contato + halo quente + fio de latao interno: tres camadas, na ordem em que aparecem. */
+.taverna-board {
+	position: absolute;
+	width: 329dp;
+	height: 245dp;
+
+	font-family: "token(font-body)";
+	font-size: 12dp;
+	color: token(text-primary);
+
+	border-radius: token(radius-md)dp;
+
+	background-color: token(surface-panel);
+	decorator: linear-gradient(to right,
+			rgba(255, 214, 150, 8) 0%,
+			transparent 18%,
+			transparent 82%,
+			rgba(0, 0, 0, 40) 100%),
+		linear-gradient(to bottom,
+			token(tavern-oak-light) 0%,
+			token(surface-panel) 42%,
+			token(surface-deep) 100%);
+
+	border-width: 2dp;
+	border-color: token(border-frame);
+
+	box-shadow:
+		0 11dp 30dp rgba(0, 0, 0, 158),
+		0 0 26dp token(tavern-lantern-glow),
+		inset 0 0 0 1dp token(tavern-brass-hair),
+		inset 0 0 22dp token(tavern-carved-shadow);
+}
+
+/* Borda externa escura, 3dp para fora, com catch de luz no topo e no lado esquerdo (a luz da cena
+   vem de cima/esquerda; nunca inverter com a sombra). */
+.taverna-shell-edge {
+	background-color: transparent;
+	border-radius: token(radius-md)dp;
+	border-color: rgba(21, 13, 6, 242);
+	box-shadow:
+		inset 1dp 0 0 rgba(224, 190, 122, 60),
+		inset -1dp 0 0 rgba(0, 0, 0, 204),
+		inset 0 1dp 0 rgba(240, 210, 150, 52),
+		inset 0 -1dp 0 rgba(0, 0, 0, 230);
+}
+
+/* Veio entalhado 4dp para dentro: um fio de latao e uma sombra larga para dentro, que e o que
+   realmente vende o relevo rebaixado. */
+.taverna-groove {
+	position: absolute;
+	left: 4dp;
+	right: 4dp;
+	top: 4dp;
+	bottom: 4dp;
+	pointer-events: none;
+	border-width: 1dp;
+	border-color: token(border-inner);
+	border-radius: token(radius-sm)dp;
+	box-shadow:
+		inset 0 0 0 1dp rgba(224, 190, 122, 34),
+		inset 0 0 14dp rgba(0, 0, 0, 158);
+}
+
+/* Placa do letreiro: peca de madeira mais escura que a tabua, com moldura de latao e sombra
+   projetada, para ler como objeto pregado por cima. */
+.taverna-sign {
+	position: absolute;
+	left: 8dp;
+	right: 8dp;
+	top: 8dp;
+	height: 46dp;
+	pointer-events: none;
+
+	background-color: token(metal-title-face);
+	decorator:
+		linear-gradient(to bottom, rgba(255, 214, 150, 20), transparent 38%),
+		linear-gradient(to bottom, #4a2610 0%, token(metal-title-face) 56%, token(metal-title-face-dark) 100%);
+
+	border-width: 1dp;
+	border-color: token(border-title);
+	border-radius: token(radius-sm)dp;
+
+	box-shadow:
+		inset 0 1dp 0 rgba(255, 214, 150, 26),
+		inset 0 -1dp 0 #120803,
+		0 2dp 6dp rgba(0, 0, 0, 150);
+}
+
+/* Fio de latao separando o nome da taverna do nome do servidor. */
+.taverna-sign-rail {
+	position: absolute;
+	left: 10dp;
+	right: 10dp;
+	top: 29dp;
+	height: 1dp;
+	pointer-events: none;
+	background-color: rgba(224, 190, 122, 64);
+	box-shadow: 0 1dp 0 rgba(0, 0, 0, 128);
+}
+
+/* Letreiro em serifa. Sem imagem: o nome e texto, entao trocar de nome nao exige arte nem OZT.
+   text-align center em elemento absoluto de largura cheia (o motor nao centraliza um no de texto
+   solto dentro de flex). */
+.taverna-wordmark {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 6dp;
+	text-align: center;
+	font-family: "token(font-wordmark)";
+	font-size: 15dp;
+	font-weight: 600;
+	letter-spacing: 0.5dp;
+	color: token(text-warm);
+	font-effect: shadow(0dp 1dp #1a0e05);
+}
+
+.label {
+	position: absolute;
+	font-family: "token(font-body)";
+}
+
+.label-server {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 32dp;
+	text-align: center;
+	font-family: "token(font-body)";
+	font-size: 8.5dp;
+	letter-spacing: 0.2dp;
+	color: token(text-secondary);
+	font-effect: shadow(0dp 1dp #1a0e05);
+}
+
+/* Cavidade do corpo: madeira mais escura e fundo quente, no lugar do preto frio do modern.
+   A sombra interna larga continua vindo da primitiva; aqui so o material muda. */
+.taverna-well {
+	left: 9dp;
+	right: 9dp;
+	top: 58dp;
+	height: 130dp;
+	pointer-events: none;
+	background-color: token(surface-recessed);
+	decorator: linear-gradient(to bottom, #150d07 0%, #1d1209 100%);
+	border-color: token(border-inner);
+}
+
+/* Rotulos em caixa alta, latao fosco. Coordenadas locais a .taverna-well. */
+.label-account,
+.label-password {
+	font-size: 8dp;
+	font-weight: 600;
+	letter-spacing: 0.64dp;
+	color: token(text-muted);
+}
+.label-account  { left: 20dp; top: 20dp; }
+.label-password { left: 20dp; top: 53dp; }
+
+/* Moldura rebaixada que desenha o campo (o <input> por cima fica transparente). */
+.taverna-field-frame {
+	position: absolute;
+	width: 156dp;
+	height: 23dp;
+	pointer-events: none;
+	border-radius: token(radius-sm)dp;
+	background-color: #0e0805;
+	border-width: 1dp;
+	border-color: token(border-recessed);
+	box-shadow:
+		inset 0 2dp 6dp rgba(0, 0, 0, 200),
+		inset 0 0 0 1dp rgba(224, 190, 122, 20);
+}
+.taverna-field-frame-account  { left: 98dp; top: 11dp; }
+.taverna-field-frame-password { left: 98dp; top: 44dp; }
+
+/* O <input> real: so posicao/tamanho/tipografia. A aparencia e da moldura acima. */
+.taverna-field {
+	position: absolute;
+	width: 140dp;
+	height: 16dp;
+	padding: 0;
+	font-family: "token(font-body)";
+	color: token(text-primary);
+	background-color: transparent;
+	border-width: 0;
+	box-shadow: none;
+	decorator: none;
+}
+.taverna-field-account  { left: 104dp; top: 17dp; }
+.taverna-field-password { left: 104dp; top: 50dp; }
+
+.checkbox-row {
+	position: absolute;
+	cursor: pointer;
+	pointer-events: auto;
+}
+.checkbox-remember-me   { left: 98dp; top: 78dp; }
+.checkbox-save-password { left: 98dp; top: 102dp; }
+
+/* Caixa de latao (o base.rcss desenha ferro; estas regras carregam depois e vencem). */
+.checkbox-box {
+	background-color: #1a0f07;
+	border-color: token(border-frame);
+	border-radius: token(radius-sm)dp;
+	box-shadow: inset 0 1dp 2dp rgba(0, 0, 0, 170);
+}
+.checkbox-box.checked {
+	background-color: token(accent-gold);
+	decorator: linear-gradient(to bottom, token(accent-gold-hover), token(accent-gold));
+	border-color: token(border-selected);
+}
+
+/* Check: uma caixa 6x3 com borda esquerda+inferior, girada -45deg (mesma tecnica do modern). */
+.checkbox-tick {
+	display: none;
+	position: absolute;
+	left: 2dp;
+	top: 1dp;
+	width: 6dp;
+	height: 3dp;
+	border-left: 2dp #2a1a10;
+	border-bottom: 2dp #2a1a10;
+	transform: rotate(-45deg);
+}
+.checkbox-box.checked .checkbox-tick {
+	display: block;
+}
+
+.checkbox-label {
+	color: token(text-secondary);
+}
+
+/* Rodape: container puro, uma linha de latao separa corpo e acao. */
+.taverna-footer {
+	left: 9dp;
+	right: 9dp;
+	top: 190dp;
+	height: 46dp;
+	bottom: auto;
+	pointer-events: none;
+	border-top-width: 1dp;
+	border-top-color: token(border-recessed);
+	box-shadow: 0 -1dp 0 rgba(224, 190, 122, 18);
+}
+
+/* Botoes: so posicao/tamanho aqui -- o resto e cor local. */
+.taverna-btn {
+	top: 8dp;
+	width: 76dp;
+	height: 26dp;
+	line-height: 26dp;
+	border-radius: token(radius-sm)dp;
+}
+.taverna-btn-ok     { left: 145dp; }
+.taverna-btn-cancel { left: 226dp; }
+
+/* Acao primaria: placa de ouro velho (o base.rcss pinta carmim; esta regra carrega depois). */
+.taverna-btn-ok {
+	color: #2a1a08;
+	background-color: token(accent-gold);
+	decorator:
+		linear-gradient(to bottom, rgba(255, 240, 200, 70), transparent 46%),
+		linear-gradient(to bottom, token(accent-gold-hover) 0%, token(accent-gold) 58%, #8a6626 100%);
+	border-color: token(border-selected);
+	box-shadow:
+		inset 0 1dp 0 rgba(255, 248, 220, 60),
+		inset 0 -1dp 0 #4a340f,
+		0 2dp 5dp rgba(0, 0, 0, 150);
+}
+
+/* Acao secundaria: madeira com moldura de latao. */
+.taverna-btn-cancel {
+	color: token(text-primary);
+	background-color: token(surface-raised);
+	decorator:
+		linear-gradient(to bottom, rgba(255, 226, 178, 24), transparent 46%),
+		linear-gradient(to bottom, #432b17 0%, token(surface-raised) 58%, #1d1209 100%);
+	border-color: token(border-frame);
+	box-shadow:
+		inset 0 1dp 0 rgba(255, 226, 178, 26),
+		inset 0 -1dp 0 #150c05,
+		0 2dp 5dp rgba(0, 0, 0, 150);
+}
+
+.taverna-btn-label {
+	position: relative;
+	font-family: "token(font-title)";
+	font-size: 10dp;
+	letter-spacing: 0.3dp;
+}
+
+/* Fora do painel, 12dp abaixo da borda de 245dp. */
+.trust-warning {
+	position: absolute;
+	left: 30dp;
+	top: 257dp;
+	width: 280dp;
+	font-size: 10dp;
+	font-family: "token(font-body)";
+	color: token(semantic-warning);
+	font-effect: shadow(0dp 1dp #000000);
+}
+
+/* Tipos de clique (UI/RmlBridge/RmlClickSounds.h) -- o Sound Editor da o som de cada tipo. */
+.btn-ok { click-sound: confirm; }
+.btn-cancel { click-sound: cancel; }
