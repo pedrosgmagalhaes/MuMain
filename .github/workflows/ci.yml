@@ -968,7 +968,9 @@ jobs:
     if: needs.quality.outputs.macos == 'true'
     # By name: the build's minimum macOS is the image's (cmake/toolchains/macos-arm64.cmake), so it changes only
     # with this line, not when GitHub moves macos-latest to a newer macOS.
-    runs-on: macos-26
+    # Fork: macos-26 never gets a runner here (queued, then cancelled after ~15 minutes, twice), while the
+    # upstream repository runs it fine, so this fork asks for the newest label the account can actually get.
+    runs-on: macos-latest
     timeout-minutes: 90
     outputs:
       caches-read-at: ${{ steps.caches_read.outputs.at }}
