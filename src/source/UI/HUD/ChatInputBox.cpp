@@ -9,6 +9,7 @@
 #include "UI/Social/SocialWindowBase.h"
 #include "UI/Core/WindowSystem.h"
 #include "UI/Core/WindowGeometry.h"
+#include "Data/Translation/MultiLanguage.h"
 #include "UI/RmlBridge/RmlPointer.h"
 #include "UI/RmlBridge/RmlWorkspaceParticipant.h"
 #include "UI/Placement/WindowPlacement.h"
@@ -363,11 +364,28 @@ bool mu::ui::window::CChatInputBox::UpdateKeyEvent()
                 break;
             }
         }
-        wstrText.append(szChatText);
-
-        if (wcslen(szChatText) != 0)
+        // A command only counts when the server sees a plain "/". A fullwidth slash from an input method
+        // (U+FF0F, which looks identical) or a leading blank makes "/post" arrive as normal chat, so
+        // normalise to halfwidth and trim before the command check - the same conversion the original
+        // client had here. Everything below sends szSentText, never the raw field text.
+        std::wstring normalized;
+        normalized.reserve(wcslen(szChatText));
+        for (const wchar_t* character = szChatText; *character != L'\0'; ++character)
         {
-            if (!CheckCommand(szChatText))
+            normalized.push_back(static_cast<wchar_t>(g_pMultiLanguage->ConvertFulltoHalfWidthChar(*character)));
+        }
+
+        while (normalized.empty() == false && normalized.front() == L' ')
+        {
+            normalized.erase(normalized.begin());
+        }
+
+        const wchar_t* szSentText = normalized.c_str();
+        wstrText.append(szSentText);
+
+        if (normalized.empty() == false)
+        {
+            if (!CheckCommand(normalized.data()))
             {
                 {
                     //if (CheckAbuseFilter(szChatText))
@@ -375,15 +393,15 @@ bool mu::ui::window::CChatInputBox::UpdateKeyEvent()
                     //    wstrText = I18N::Game::PwnedByTheFilter;
                     //}
 
-                    if (m_bWhisperSend && wcslen(szChatText) && wcslen(szWhisperID) > 0)
+                    if (m_bWhisperSend && wcslen(szSentText) && wcslen(szWhisperID) > 0)
                     {
                         SocketClient->ToGameServer()->SendWhisperMessage(MU_C16(szWhisperID), MU_C16(wstrText.c_str()));
-                        g_pChatListBox->AddText(Hero->ID, szChatText, mu::ui::window::TYPE_WHISPER_MESSAGE);
+                        g_pChatListBox->AddText(Hero->ID, szSentText, mu::ui::window::TYPE_WHISPER_MESSAGE);
                         AddWhsprIDHistory(szWhisperID);
                     }
-                    else if (wcsncmp(szChatText, I18N::Game::Warp, wcslen(I18N::Game::Warp)) == 0)
+                    else if (wcsncmp(szSentText, I18N::Game::Warp, wcslen(I18N::Game::Warp)) == 0)
                     {
-                        wchar_t* pszMapName = szChatText + wcslen(I18N::Game::Warp) + 1;
+                        const wchar_t* pszMapName = szSentText + wcslen(I18N::Game::Warp) + 1;
                         int iMapIndex = g_pMoveCommandWindow->GetMapIndexFromMovereq(pszMapName);
 
                         if (g_pMoveCommandWindow->IsTheMapInDifferentServer(gMapManager.WorldActive, iMapIndex))
@@ -397,7 +415,7 @@ bool mu::ui::window::CChatInputBox::UpdateKeyEvent()
                     {
                         if (Hero->SafeZone || !GameLogic::Items::IsRideableMountModel(Hero->Helper.Type))
                         {
-                            UI::Chat::CheckChatText(szChatText);
+                            UI::Chat::CheckChatText(szSentText);
                         }
 
                         SocketClient->ToGameServer()->SendPublicChatMessage(MU_C16(Hero->ID), MU_C16(wstrText.c_str()));
