@@ -10,6 +10,8 @@
 #include <execution>
 #include <optional>
 #include <algorithm>
+#include <cstdlib>
+#include <set>
 #include <span>
 #include "Render/Drawing/LegacyCalls.h"
 #include "UI/Chat/Chat.h"
@@ -35,6 +37,7 @@
 #include "Engine/Object/Movement/TurnLag.h"
 #include "Engine/Object/Movement/Wings.h"
 #include "Core/Utilities/FrameProfiler.h"
+#include "Core/Utilities/Log/MuLogger.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzObject.h"
 #include "Engine/Object/ZzzCharacter.h"
@@ -74,6 +77,7 @@
 #include "Data/GameData/ItemData/ItemType.h"
 #include "Data/GameData/MonsterData/MonsterDatabase.h"
 #include "Data/GameData/MonsterData/MonsterModelDatabase.h"
+#include "Data/GameData/MonsterData/MonsterModelSlots.h"
 #include "Engine/Object/MonsterModelBody.h"
 #include "GameLogic/Monsters/MonsterAttackPlay.h"
 #include "GameLogic/Monsters/MonsterSoundEvents.h"
@@ -6550,6 +6554,28 @@ void MoveCharactersClient()
         to->Visible = TestFrustrum2D(to->Position[0] * 0.01f, to->Position[1] * 0.01f, -20.f);
     }
 
+#ifdef MU_ENABLE_CONTROL_SOCKET
+    // Hero draw probe (C35): one line a second with everything that decides whether the player's own
+    // character is drawn, so a map where the hero is missing says which of the three causes it is:
+    // buried (pos z against terrain), culled (visible 0 / frustum2d 0) or transparent (alpha 0).
+    {
+        static const bool heroDiag = std::getenv("MU_HERO_DIAGNOSTICS") != nullptr;
+        static float lastHeroLog = -1.f;
+        if (heroDiag && Hero != nullptr && WorldTime - lastHeroLog >= 1000.f)
+        {
+            lastHeroLog = WorldTime;
+            const OBJECT* ho = &Hero->Object;
+            const float terrain = RequestTerrainHeight(ho->Position[0], ho->Position[1]);
+            mu::log::Get("world")->info(
+                "hero: live {} visible {} alpha {:.3f} scale {:.3f} safezone {} dead {} kind {} subtype {} "
+                "pos {:.1f},{:.1f},{:.1f} terrain {:.1f} sunk {:.1f} frustum2d {}",
+                ho->Live, ho->Visible, ho->Alpha, ho->Scale, Hero->SafeZone, Hero->Dead, ho->Kind, ho->SubType,
+                ho->Position[0], ho->Position[1], ho->Position[2], terrain, terrain - ho->Position[2],
+                TestFrustrum2D(ho->Position[0] * 0.01f, ho->Position[1] * 0.01f, -20.f));
+        }
+    }
+#endif
+
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
     {
         MoveCharacterClient(&CharactersClient[i]);
@@ -12479,10 +12505,100 @@ void RenderCharactersClient()
         // The update cleared a target the siege cloak hides, and moved a hidden GM's pick box away.
         if (IsHiddenBySiegeCloak(c) || IsHiddenGameMaster(c))
             continue;
+
+#ifdef MU_ENABLE_CONTROL_SOCKET
+        // Monster draw probe (C37): once per monster number of the map 91 set, what the draw resolves —
+        // whether the character is drawn at all, which model slot it got and whether that model has
+        // geometry (NumActions 0 means the BMD never loaded, and RenderCharacter returns right away).
+        {
+            static const bool monsterDiag = std::getenv("MU_MONSTER_DIAGNOSTICS") != nullptr;
+            if (monsterDiag && o->Live && c->MonsterIndex >= 700 && c->MonsterIndex <= 704)
+            {
+                static std::set<int> loggedMonsters;
+                if (loggedMonsters.insert(static_cast<int>(c->MonsterIndex)).second)
+                {
+                    const BMD& model = Models[o->Type];
+                    mu::log::Get("world")->info(
+                        "monster draw: monster {} type {} slot {} actions {} bones {} meshes {} action {} frame {:.2f} "
+                        "alpha {:.3f} visible {} scale {:.2f} bbox {:.1f},{:.1f},{:.1f}..{:.1f},{:.1f},{:.1f} "
+                        "pos {:.1f},{:.1f},{:.1f} terrain {:.1f} kind {}",
+                        static_cast<int>(c->MonsterIndex), static_cast<int>(o->Type),
+                        Data::Monsters::GetMonsterModelSymbol(static_cast<int>(o->Type)), model.NumActions,
+                        model.NumBones, model.NumMeshs, o->CurrentAction, o->AnimationFrame,
+                        o->Alpha, o->Visible, o->Scale, o->BoundingBoxMin[0], o->BoundingBoxMin[1],
+                        o->BoundingBoxMin[2], o->BoundingBoxMax[0], o->BoundingBoxMax[1], o->BoundingBoxMax[2],
+                        o->Position[0], o->Position[1], o->Position[2],
+                        RequestTerrainHeight(o->Position[0], o->Position[1]), o->Kind);
+                    // Which mesh is which: the hidden index has to be a real one, and a mesh
+                    // without a texture draws as black shards when it is not hidden.
+                    for (int mesh = 0; mesh < model.NumMeshs; ++mesh)
+                    {
+                        const char* file = model.Textures[mesh].FileName;
+                        size_t length = 0;
+                        while (length < 32 && file[length] != '\0')
+                        {
+                            ++length;
+                        }
+                        const Mesh_t& one = model.Meshs[mesh];
+                        float lo[3] = {1e9f, 1e9f, 1e9f};
+                        float hi[3] = {-1e9f, -1e9f, -1e9f};
+                        int vertexBoneMin = 9999, vertexBoneMax = -9999, vertexBonesOff = 0;
+                        int normalBoneMin = 9999, normalBoneMax = -9999, normalBonesOff = 0;
+                        for (int v = 0; v < one.NumVertices; ++v)
+                        {
+                            const Vertex_t& vertex = one.Vertices[v];
+                            for (int axis = 0; axis < 3; ++axis)
+                            {
+                                lo[axis] = std::min(lo[axis], vertex.Position[axis]);
+                                hi[axis] = std::max(hi[axis], vertex.Position[axis]);
+                            }
+                            vertexBoneMin = std::min(vertexBoneMin, static_cast<int>(vertex.Node));
+                            vertexBoneMax = std::max(vertexBoneMax, static_cast<int>(vertex.Node));
+                            if (vertex.Node < 0 || vertex.Node >= model.NumBones)
+                                ++vertexBonesOff;
+                        }
+                        for (int n = 0; n < one.NumNormals; ++n)
+                        {
+                            const int node = one.Normals[n].Node;
+                            normalBoneMin = std::min(normalBoneMin, node);
+                            normalBoneMax = std::max(normalBoneMax, node);
+                            if (node < 0 || node >= model.NumBones)
+                                ++normalBonesOff;
+                        }
+                        mu::log::Get("world")->info(
+                            "monster mesh: monster {} mesh {} tris {} verts {} texture [{}] texindex {} "
+                            "bbox {:.0f},{:.0f},{:.0f}..{:.0f},{:.0f},{:.0f} "
+                            "vertexBones {}..{} off {} normalBones {}..{} off {} of {}",
+                            static_cast<int>(c->MonsterIndex), mesh, one.NumTriangles, one.NumVertices,
+                            std::string_view(file, length), static_cast<int>(one.Texture),
+                            lo[0], lo[1], lo[2], hi[0], hi[1], hi[2],
+                            vertexBoneMin, vertexBoneMax, vertexBonesOff,
+                            normalBoneMin, normalBoneMax, normalBonesOff, model.NumBones);
+                    }
+                }
+            }
+        }
+#endif
         if (o->Live)
         {
             if (o->Visible)
             {
+                if (c == Hero)
+                {
+#ifdef MU_ENABLE_CONTROL_SOCKET
+                    // Hero draw probe (C35), same env as the one per second in MoveCharactersClient: whether
+                    // the draw path was reached and which of its gates pass.
+                    static bool heroDrawnLogged = false;
+                    if (!heroDrawnLogged)
+                    {
+                        heroDrawnLogged = true;
+                        mu::log::Get("world")->info(
+                            "hero draw: reached 1 visible 1 actions {} parts {} shadow {} change {} alpha {:.3f}",
+                            Models[o->Type].NumActions, DrawsPlayerBodyParts(c, o), DrawsPlayerBodyShadow(c, o),
+                            c->Change, o->Alpha);
+                    }
+#endif
+                }
                 if (i != SelectedCharacter && i != SelectedNpc)
                     RenderCharacter(c, o);
                 else

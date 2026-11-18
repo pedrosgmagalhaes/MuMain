@@ -454,6 +454,12 @@
       "animations": {"die": 0.1}
     },
     {
+      "slot": "MONSTER_MODEL_DEATH_ANGEL_3",
+      "file": "Data/Monster/Monster64_escarlate.bmd",
+      "textureFolders": ["Monster"],
+      "animations": {"die": 0.1}
+    },
+    {
       "slot": "MONSTER_MODEL_ILLUSION_OF_KUNDUN",
       "file": "Data/Monster/monster65.bmd",
       "textureFolders": ["Monster"],

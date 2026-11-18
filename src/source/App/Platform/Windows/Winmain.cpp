@@ -1876,6 +1876,11 @@ void UpdateCursorClip()
 // Update camera state when window resolution changes
 void UpdateResolutionDependentSystems()
 {
+    // One line per resolution change: the login/character scenes place their panels from these two
+    // values, so a panel that never appears can be told apart from a panel placed off-screen.
+    mu::log::Get("ui")->info("window {}x{} (fullscreen={})", WindowWidth, WindowHeight,
+                             g_bUseFullscreenMode ? 1 : 0);
+
     // Reposition old-style CWin-based UI for the current scene. Without this,
     // login/character-scene info boxes stay anchored to the old screen size
     // until the player re-enters the scene.

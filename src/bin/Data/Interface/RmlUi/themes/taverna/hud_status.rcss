@@ -1,0 +1,20 @@
+/* Tema taverna: a coordenada do herói no quadro do HUD (hud_status.rml #position).
+
+   Vem de HudStatusRmlModel::positionText, a mesma string da barra do MU Helper. Fica no canto superior
+   direito do quadro do HUD, em pergaminho com sombra escura — lê sobre qualquer terreno sem virar
+   caixa de texto no meio da tela. O tamanho da fonte é o do HUD (text_px, cancelado por .sharp-text),
+   então acompanha a resolução. */
+
+#position {
+	position: absolute;
+	right: 6px;
+	top: 4px;
+	pointer-events: none;
+}
+
+.position-text {
+	color: token(tavern-parchment-ink);
+	text-align: right;
+	white-space: nowrap;
+	text-shadow: 0 1px 0 token(metal-outer);
+}

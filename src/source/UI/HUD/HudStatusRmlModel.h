@@ -21,5 +21,9 @@ struct HudStatusRmlModel
 
     // An event's entry countdown (Blood Castle, Chaos Castle, Devil Square and the rest).
     Rml::String countdown;
+
+    // Where the hero stands: "Lorencia (127 , 131)", the same text the MU Helper bar shows. Empty when
+    // the game has no hero yet (login, selection), so a theme can hide the line with data-if.
+    Rml::String positionText;
 };
 } // namespace UI::Hud

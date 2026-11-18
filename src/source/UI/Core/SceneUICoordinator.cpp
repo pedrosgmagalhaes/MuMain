@@ -14,6 +14,7 @@
 #include "Character/CharInfoBalloonMng.h"
 #include "UI/Windows/LoginMainWin.h"
 #include "Core/Globals/_enum.h"
+#include "Core/Utilities/Log/MuLogger.h"
 #include "Core/Input/Input.h"
 #include "Audio/DSPlaySound.h"
 #include "Render/Textures/ZzzOpenglUtil.h"
@@ -144,6 +145,14 @@ void CSceneUICoordinator::RepositionSceneUI()
 
 void CSceneUICoordinator::RepositionLoginWindows()
 {
+    // A size of zero means the window has not been sized yet (a fullscreen start reports its real
+    // size only once the OS resize arrives). Centring on it puts every panel at a negative origin,
+    // where nothing is drawn; the resize that follows repositions them.
+    if (WindowWidth == 0 || WindowHeight == 0)
+    {
+        return;
+    }
+
     constexpr int messageWidth = 352;
     constexpr int messageHeight = 113;
     constexpr int barMargin = 30;
@@ -157,12 +166,26 @@ void CSceneUICoordinator::RepositionLoginWindows()
     g_LoginMainWin.SetPosition(barMargin,
         static_cast<int>(barBaseline * height) - g_LoginMainWin.GetHeight() - barGap);
     g_LoginWin.RefreshLayout();
-    g_LoginWin.SetPosition((width - g_LoginWin.GetWidth()) / 2,
-                          (height - g_LoginWin.GetHeight()) * 2 / loginVerticalDivisor);
+    const int loginX = (width - g_LoginWin.GetWidth()) / 2;
+    const int loginY = (height - g_LoginWin.GetHeight()) * 2 / loginVerticalDivisor;
+    g_LoginWin.SetPosition(loginX, loginY);
+
+    // Layout probe (C32): what the login scene places and what it shows, in one line, so a scene that
+    // draws its decorations but no panel can be told apart from one that places the panels off-screen.
+    mu::log::Get("ui")->info("login layout: window {}x{} dp {:.3f} | login {},{},{}x{} visible {} | bar {},{},{}x{} visible {}",
+                             width, height, UI::Scaling::TypographyScale(width, height), loginX, loginY,
+                             g_LoginWin.GetWidth(), g_LoginWin.GetHeight(), g_LoginWin.IsVisible() ? 1 : 0,
+                             barMargin, static_cast<int>(barBaseline * height) - g_LoginMainWin.GetHeight() - barGap,
+                             g_LoginMainWin.GetWidth(), g_LoginMainWin.GetHeight(), g_LoginMainWin.IsVisible() ? 1 : 0);
 }
 
 void CSceneUICoordinator::RepositionCharacterWindows()
 {
+    if (WindowWidth == 0 || WindowHeight == 0)
+    {
+        return;
+    }
+
     constexpr int messageWidth = 352;
     constexpr int messageHeight = 113;
     constexpr int noticeMargin = 10;

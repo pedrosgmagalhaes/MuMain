@@ -1,6 +1,8 @@
 
 #include "stdafx.h"
+#include "Core/Utilities/Log/MuLogger.h"
 #include <algorithm>
+#include <string>
 #include "I18N/All.h"
 
 #include "UI/HUD/MainFrameWindow.h"	// self
@@ -753,6 +755,21 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
     syncText(&MainFrameRmlModel::skillSlot3Icon, "skill_slot_3_icon", g_pSkillList->GetHotKeySlotIconDecorator(3));
     syncText(&MainFrameRmlModel::skillSlot4Icon, "skill_slot_4_icon", g_pSkillList->GetHotKeySlotIconDecorator(4));
     syncText(&MainFrameRmlModel::currentSkillIcon, "current_skill_icon", g_pSkillList->GetCurrentSkillIconDecorator());
+
+    // Icon probe (C32): the decorator each hotkey slot pushes, once per launch. A flat yellow cell is
+    // an atlas cell, so this names the sprite (atlas and position) instead of guessing at the cause.
+    {
+        static bool logged = false;
+        if (!logged)
+        {
+            logged = true;
+            mu::log::Get("ui")->info(
+                "skill icons: slots [{}, {}, {}, {}, {}] current [{}]",
+                g_pSkillList->GetHotKeySlotIconDecorator(0), g_pSkillList->GetHotKeySlotIconDecorator(1),
+                g_pSkillList->GetHotKeySlotIconDecorator(2), g_pSkillList->GetHotKeySlotIconDecorator(3),
+                g_pSkillList->GetHotKeySlotIconDecorator(4), g_pSkillList->GetCurrentSkillIconDecorator());
+        }
+    }
     syncText(&MainFrameRmlModel::currentSkillHotkey, "current_skill_hotkey",
              CharacterAttribute->SkillNumber > 0 ? hotkeyText(g_pSkillList->GetSkillHotKeyNumber(Hero->CurrentSkill))
                                                  : Rml::String());
@@ -776,6 +793,9 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
     syncText(&MainFrameRmlModel::itemSlot3Count, "item_slot_3_count", stackCountText(m_ItemHotKey.GetSlotItemCount(3)));
     syncFloat(&MainFrameRmlModel::currentSkillCooldown, "current_skill_cooldown", g_pSkillList->GetCurrentSkillCooldownFraction());
 
+    // Set once per grid opening by the probe below; reset when the grid closes.
+    static bool gridProbeLogged = false;
+
     syncBool(&MainFrameRmlModel::skillGridOpen, "skill_grid_open", g_pSkillList->IsSkillGridOpen());
     syncBool(&MainFrameRmlModel::skillListUp, "skill_list_up", g_pSkillList->IsSkillListUp());
 
@@ -787,6 +807,32 @@ void mu::ui::window::CMainFrameWindow::SyncRmlModel()
         model.petSkillCells = g_pSkillList->GetPetSnapshot();
         m_RmlView.MarkDirty("skill_grid_cells");
         m_RmlView.MarkDirty("pet_skill_cells");
+
+        // Grid probe (C32): once per opening, each cell's skill index with the decorator it draws, plus
+        // the hotkey numbers of the icon row. A flat yellow square is an atlas cell, so this names it.
+        if (!gridProbeLogged)
+        {
+            gridProbeLogged = true;
+            std::string cells;
+            for (const auto& cell : model.skillGridCells)
+            {
+                if (!cells.empty())
+                {
+                    cells += ", ";
+                }
+
+                cells += std::to_string(cell.skillIndex) + ":" + cell.icon;
+            }
+
+            mu::log::Get("ui")->info("skill grid: cells [{}] hotkeys [{}, {}, {}, {}, {}]", cells,
+                                     g_pSkillList->GetHotKeySlotNumber(0), g_pSkillList->GetHotKeySlotNumber(1),
+                                     g_pSkillList->GetHotKeySlotNumber(2), g_pSkillList->GetHotKeySlotNumber(3),
+                                     g_pSkillList->GetHotKeySlotNumber(4));
+        }
+    }
+    else
+    {
+        gridProbeLogged = false;
     }
 
     // Shared skill tooltip: one hover target queued at a time (QueueTooltip()/OnUnhover()).

@@ -8,6 +8,8 @@
 #include "UI/RmlBridge/RmlNativeTextSize.h"
 #include "UI/RmlBridge/RmlSyncField.h"
 #include "UI/Placement/WindowPlacement.h"
+#include "Engine/Object/ZzzCharacter.h"
+#include "World/MapInfra/MapManager.h"
 #include "UI/Scaling/UITransform.h"
 
 #include <string>
@@ -32,6 +34,7 @@ void StatusTexts::BindModel(Rml::DataModelConstructor& c, HudStatusRmlModel& mod
     c.Bind("macro_fraction", &model.macroFraction);
     c.Bind("world_centre", &model.worldCentre);
     c.Bind("countdown", &model.countdown);
+    c.Bind("position_text", &model.positionText);
 }
 
 void StatusTexts::Sync(bool visible, bool worldOverlays)
@@ -67,9 +70,21 @@ void StatusTexts::Sync(bool visible, bool worldOverlays)
     SyncField(binder, &HudStatusRmlModel::countdown, "countdown",
               Rml::String(StringUtils::WideToNarrow(matchEvent::CountdownText().c_str())));
 
+    // The same string the MU Helper bar publishes (MuHelperBar.cpp: inherited behaviour, kept in sync
+    // there rather than duplicated in format).
+    Rml::String positionText;
+    if (Hero != nullptr)
+    {
+        wchar_t szPosition[255] = {};
+        mu_swprintf(szPosition, L"%ls (%d , %d)", gMapManager.GetMapName(gMapManager.WorldActive), Hero->PositionX,
+                    Hero->PositionY);
+        positionText = Rml::String(StringUtils::WideToNarrow(szPosition));
+    }
+    SyncField(binder, &HudStatusRmlModel::positionText, "position_text", std::move(positionText));
+
     const HudStatusRmlModel& model = binder.GetModel();
     const bool anything = !model.switchFirst.empty() || !model.switchSecond.empty() || model.macroVisible ||
-                          !model.countdown.empty();
+                          !model.countdown.empty() || !model.positionText.empty();
     UI::RmlBridge::SyncDocumentVisibility(m_View.Document(), anything);
 }
 

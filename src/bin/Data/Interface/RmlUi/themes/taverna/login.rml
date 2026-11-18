@@ -1,0 +1,72 @@
+<rml>
+<head>
+	<title>Login</title>
+	<link type="text/rcss" href="base.rcss"/>
+	<link type="text/rcss" href="login.rcss"/>
+</head>
+<body>
+	<!-- Login da taverna. Fork proprio como o modern faz com o ../../login.rml compartilhado:
+	     mantem ids (panel/input_account/input_password), data-model="login", callbacks
+	     login_ok_click/login_cancel_click/login_toggle_remember_me/login_toggle_save_password e o
+	     data-class-checked dos checkboxes -- LoginWin.cpp procura tudo por nome
+	     (tools/check_rml_rcss_drift.py valida isso a cada build).
+
+	     Estrutura: tabua de madeira (.taverna-board) -> veio escuro (.modern-shell-edge herdado)
+	     -> letreiro entalhado com o nome do servidor (.taverna-sign) -> cavidade rebaixada para os
+	     campos (.modern-content-well) -> rodape com os dois botoes. Letreiro e texto, nao imagem:
+	     trocar o nome do servidor aqui nao exige arte nenhuma. -->
+	<div id="panel" class="modern-frame taverna-board" data-model="login">
+		<div class="modern-shell-edge taverna-shell-edge"></div>
+		<div class="taverna-groove"></div>
+
+		<!-- Letreiro: placa entalhada, nome da taverna em serifa + nome do servidor vindo do
+		     modelo. A placa e uma peca so; o brilho de lanterna vem de box-shadow no painel. -->
+		<div class="taverna-sign">
+			<div class="taverna-sign-rail"></div>
+			<span class="taverna-wordmark">Taverneiro do MU</span>
+			<span class="label label-server">{{server_name}}</span>
+		</div>
+
+		<!-- Corpo rebaixado: rotulos, os dois <input> reais, os dois checkboxes. -->
+		<div class="modern-content-well taverna-well">
+			<span class="label label-account">{{account_label}}</span>
+			<span class="label label-password">{{password_label}}</span>
+
+			<div class="taverna-field-frame taverna-field-frame-account"></div>
+			<div class="taverna-field-frame taverna-field-frame-password"></div>
+
+			<!-- Os <input> reais vem DEPOIS da moldura: o RmlUi pinta irmaos na ordem do documento,
+			     entao um campo declarado antes fica atras da arte e esconde texto e caret. -->
+			<input id="input_account" type="text" class="text-field taverna-field taverna-field-account"
+			       data-value="username"/>
+			<input id="input_password" type="password" class="text-field taverna-field taverna-field-password"
+			       data-value="password"/>
+
+			<div class="checkbox-row checkbox-remember-me" data-event-click="login_toggle_remember_me">
+				<div class="checkbox-box" data-class-checked="remember_me_checked">
+					<div class="checkbox-tick"></div>
+				</div>
+				<span class="checkbox-label">{{remember_me_label}}</span>
+			</div>
+			<div class="checkbox-row checkbox-save-password" data-event-click="login_toggle_save_password">
+				<div class="checkbox-box" data-class-checked="save_password_checked">
+					<div class="checkbox-tick"></div>
+				</div>
+				<span class="checkbox-label">{{save_password_label}}</span>
+			</div>
+		</div>
+
+		<!-- Rodape: so container. A separacao corpo/rodape e o border-top de .taverna-footer. -->
+		<div class="modern-footer-band taverna-footer">
+			<div class="btn btn-ok taverna-btn taverna-btn-ok" data-event-click="login_ok_click">
+				<span class="taverna-btn-label">{{ok_label}}</span>
+			</div>
+			<div class="btn btn-cancel taverna-btn taverna-btn-cancel" data-event-click="login_cancel_click">
+				<span class="taverna-btn-label">{{cancel_label}}</span>
+			</div>
+		</div>
+
+		<span class="trust-warning">{{trust_warning}}</span>
+	</div>
+</body>
+</rml>
