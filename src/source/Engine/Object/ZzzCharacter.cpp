@@ -11,6 +11,7 @@
 #include <optional>
 #include <algorithm>
 #include <cstdlib>
+#include <set>
 #include <span>
 #include "Render/Drawing/LegacyCalls.h"
 #include "UI/Chat/Chat.h"
@@ -76,6 +77,7 @@
 #include "Data/GameData/ItemData/ItemType.h"
 #include "Data/GameData/MonsterData/MonsterDatabase.h"
 #include "Data/GameData/MonsterData/MonsterModelDatabase.h"
+#include "Data/GameData/MonsterData/MonsterModelSlots.h"
 #include "Engine/Object/MonsterModelBody.h"
 #include "GameLogic/Monsters/MonsterAttackPlay.h"
 #include "GameLogic/Monsters/MonsterSoundEvents.h"
@@ -12501,6 +12503,32 @@ void RenderCharactersClient()
         // The update cleared a target the siege cloak hides, and moved a hidden GM's pick box away.
         if (IsHiddenBySiegeCloak(c) || IsHiddenGameMaster(c))
             continue;
+
+        // Monster draw probe (C37): once per monster number of the map 91 set, what the draw resolves —
+        // whether the character is drawn at all, which model slot it got and whether that model has
+        // geometry (NumActions 0 means the BMD never loaded, and RenderCharacter returns right away).
+        {
+            static const bool monsterDiag = std::getenv("MU_MONSTER_DIAGNOSTICS") != nullptr;
+            if (monsterDiag && o->Live && c->MonsterIndex >= 700 && c->MonsterIndex <= 704)
+            {
+                static std::set<int> loggedMonsters;
+                if (loggedMonsters.insert(static_cast<int>(c->MonsterIndex)).second)
+                {
+                    const BMD& model = Models[o->Type];
+                    mu::log::Get("world")->info(
+                        "monster draw: monster {} type {} slot {} actions {} bones {} meshes {} action {} frame {:.2f} "
+                        "alpha {:.3f} visible {} scale {:.2f} bbox {:.1f},{:.1f},{:.1f}..{:.1f},{:.1f},{:.1f} "
+                        "pos {:.1f},{:.1f},{:.1f} terrain {:.1f} kind {}",
+                        static_cast<int>(c->MonsterIndex), static_cast<int>(o->Type),
+                        Data::Monsters::GetMonsterModelSymbol(static_cast<int>(o->Type)), model.NumActions,
+                        model.NumBones, model.NumMeshs, o->CurrentAction, o->AnimationFrame,
+                        o->Alpha, o->Visible, o->Scale, o->BoundingBoxMin[0], o->BoundingBoxMin[1],
+                        o->BoundingBoxMin[2], o->BoundingBoxMax[0], o->BoundingBoxMax[1], o->BoundingBoxMax[2],
+                        o->Position[0], o->Position[1], o->Position[2],
+                        RequestTerrainHeight(o->Position[0], o->Position[1]), o->Kind);
+                }
+            }
+        }
         if (o->Live)
         {
             if (o->Visible)

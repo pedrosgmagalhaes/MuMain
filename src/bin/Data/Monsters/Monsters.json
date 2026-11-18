@@ -12132,7 +12132,7 @@
    "model": "MONSTER_MODEL_LIZARD",
    "soundSet": "Lizard King",
    "scale": 1.0,
-   "hiddenMesh": 0,
+   "hiddenMesh": -1,
    "numbers": [
     {
      "number": 700,
@@ -12152,7 +12152,7 @@
    "model": "MONSTER_MODEL_LIZARD_WARRIOR",
    "soundSet": "Lizard King",
    "scale": 1.0,
-   "hiddenMesh": 0,
+   "hiddenMesh": -1,
    "numbers": [
     {
      "number": 701,
@@ -12172,7 +12172,7 @@
    "model": "MONSTER_MODEL_DARK_ELF",
    "soundSet": "Elf Lala",
    "scale": 1.0,
-   "hiddenMesh": 0,
+   "hiddenMesh": -1,
    "numbers": [
     {
      "number": 702,
@@ -12192,7 +12192,7 @@
    "model": "MONSTER_MODEL_DEATH_ANGEL_3",
    "soundSet": "Death Angel",
    "scale": 1.0,
-   "hiddenMesh": 0,
+   "hiddenMesh": -1,
    "numbers": [
     {
      "number": 703,
@@ -12212,7 +12212,7 @@
    "model": "MONSTER_MODEL_DEATH_ANGEL_3",
    "soundSet": "Death Angel",
    "scale": 1.6,
-   "hiddenMesh": 0,
+   "hiddenMesh": -1,
    "numbers": [
     {
      "number": 704,
