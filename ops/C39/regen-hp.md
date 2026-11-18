@@ -73,3 +73,15 @@ descansando **1,5–2 min**.
 `ops/C39/regen-hp.sql`: `BEGIN`, um `INSERT ... WHERE NOT EXISTS` (idempotente: 36 linhas), `SELECT` de
 conferência, rollback pronto e `COMMIT` comentado. Aplicar e reiniciar o `openmu-startup` — a configuração
 só é lida na subida.
+
+## Correção 2 (o quantum de 215 medido depois da janela)
+
+`ItemAwareAttributeSystem.cs:24` monta os atributos com
+`character.CharacterClass.BaseAttributeValues.Concat(gameConfiguration.GlobalBaseAttributeValues)`.
+O INSERT do C39 preencheu `GameConfigurationId` (copiado da classe) nas 36 linhas; Mana, Ability e Shield
+têm esse campo **NULL**. Com isso as 36 linhas entram também como valores **globais**, e todo personagem
+soma as 18 classes: multiplicador 0,194 e absoluto 23 → `(2311 × 0,194 + 23) × 0,4286 = 202` por tick,
+mais 12,7 da própria classe = **215** — o quantum medido, constante e independente do que falta.
+
+Conserto em config: `GameConfigurationId = NULL` nas 36 linhas (`regen-hp-fix.sql`). Depois disso:
+`(2311 × 0,012 + 2) × 0,4286 = 12,7` por tick = **4,24 HP/s** parado no nível 145, a taxa aprovada.
