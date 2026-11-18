@@ -12536,10 +12536,41 @@ void RenderCharactersClient()
                         {
                             ++length;
                         }
+                        const Mesh_t& one = model.Meshs[mesh];
+                        float lo[3] = {1e9f, 1e9f, 1e9f};
+                        float hi[3] = {-1e9f, -1e9f, -1e9f};
+                        int vertexBoneMin = 9999, vertexBoneMax = -9999, vertexBonesOff = 0;
+                        int normalBoneMin = 9999, normalBoneMax = -9999, normalBonesOff = 0;
+                        for (int v = 0; v < one.NumVertices; ++v)
+                        {
+                            const Vertex_t& vertex = one.Vertices[v];
+                            for (int axis = 0; axis < 3; ++axis)
+                            {
+                                lo[axis] = std::min(lo[axis], vertex.Position[axis]);
+                                hi[axis] = std::max(hi[axis], vertex.Position[axis]);
+                            }
+                            vertexBoneMin = std::min(vertexBoneMin, static_cast<int>(vertex.Node));
+                            vertexBoneMax = std::max(vertexBoneMax, static_cast<int>(vertex.Node));
+                            if (vertex.Node < 0 || vertex.Node >= model.NumBones)
+                                ++vertexBonesOff;
+                        }
+                        for (int n = 0; n < one.NumNormals; ++n)
+                        {
+                            const int node = one.Normals[n].Node;
+                            normalBoneMin = std::min(normalBoneMin, node);
+                            normalBoneMax = std::max(normalBoneMax, node);
+                            if (node < 0 || node >= model.NumBones)
+                                ++normalBonesOff;
+                        }
                         mu::log::Get("world")->info(
-                            "monster mesh: monster {} mesh {} tris {} verts {} texture [{}]",
-                            static_cast<int>(c->MonsterIndex), mesh, model.Meshs[mesh].NumTriangles,
-                            model.Meshs[mesh].NumVertices, std::string_view(file, length));
+                            "monster mesh: monster {} mesh {} tris {} verts {} texture [{}] texindex {} "
+                            "bbox {:.0f},{:.0f},{:.0f}..{:.0f},{:.0f},{:.0f} "
+                            "vertexBones {}..{} off {} normalBones {}..{} off {} of {}",
+                            static_cast<int>(c->MonsterIndex), mesh, one.NumTriangles, one.NumVertices,
+                            std::string_view(file, length), static_cast<int>(one.Texture),
+                            lo[0], lo[1], lo[2], hi[0], hi[1], hi[2],
+                            vertexBoneMin, vertexBoneMax, vertexBonesOff,
+                            normalBoneMin, normalBoneMax, normalBonesOff, model.NumBones);
                     }
                 }
             }

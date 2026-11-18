@@ -12152,7 +12152,7 @@
    "model": "MONSTER_MODEL_LIZARD_WARRIOR",
    "soundSet": "Lizard King",
    "scale": 1.0,
-   "hiddenMesh": 0,
+   "hiddenMesh": -1,
    "numbers": [
     {
      "number": 701,
@@ -12160,7 +12160,8 @@
       91
      ]
     }
-   ]
+   ],
+   "shadow": false
   },
   {
    "name": {
@@ -12172,7 +12173,7 @@
    "model": "MONSTER_MODEL_DARK_ELF",
    "soundSet": "Elf Lala",
    "scale": 1.0,
-   "hiddenMesh": 0,
+   "hiddenMesh": -1,
    "numbers": [
     {
      "number": 702,
@@ -12180,7 +12181,8 @@
       91
      ]
     }
-   ]
+   ],
+   "shadow": false
   },
   {
    "name": {
