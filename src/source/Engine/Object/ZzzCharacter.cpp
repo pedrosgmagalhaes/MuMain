@@ -10,6 +10,7 @@
 #include <execution>
 #include <optional>
 #include <algorithm>
+#include <cstdlib>
 #include <span>
 #include "Render/Drawing/LegacyCalls.h"
 #include "UI/Chat/Chat.h"
@@ -35,6 +36,7 @@
 #include "Engine/Object/Movement/TurnLag.h"
 #include "Engine/Object/Movement/Wings.h"
 #include "Core/Utilities/FrameProfiler.h"
+#include "Core/Utilities/Log/MuLogger.h"
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzObject.h"
 #include "Engine/Object/ZzzCharacter.h"
@@ -6550,6 +6552,26 @@ void MoveCharactersClient()
         to->Visible = TestFrustrum2D(to->Position[0] * 0.01f, to->Position[1] * 0.01f, -20.f);
     }
 
+    // Hero draw probe (C35): one line a second with everything that decides whether the player's own
+    // character is drawn, so a map where the hero is missing says which of the three causes it is:
+    // buried (pos z against terrain), culled (visible 0 / frustum2d 0) or transparent (alpha 0).
+    {
+        static const bool heroDiag = std::getenv("MU_HERO_DIAGNOSTICS") != nullptr;
+        static float lastHeroLog = -1.f;
+        if (heroDiag && Hero != nullptr && WorldTime - lastHeroLog >= 1000.f)
+        {
+            lastHeroLog = WorldTime;
+            const OBJECT* ho = &Hero->Object;
+            const float terrain = RequestTerrainHeight(ho->Position[0], ho->Position[1]);
+            mu::log::Get("world")->info(
+                "hero: live {} visible {} alpha {:.3f} scale {:.3f} safezone {} dead {} kind {} subtype {} "
+                "pos {:.1f},{:.1f},{:.1f} terrain {:.1f} sunk {:.1f} frustum2d {}",
+                ho->Live, ho->Visible, ho->Alpha, ho->Scale, Hero->SafeZone, Hero->Dead, ho->Kind, ho->SubType,
+                ho->Position[0], ho->Position[1], ho->Position[2], terrain, terrain - ho->Position[2],
+                TestFrustrum2D(ho->Position[0] * 0.01f, ho->Position[1] * 0.01f, -20.f));
+        }
+    }
+
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
     {
         MoveCharacterClient(&CharactersClient[i]);
@@ -12483,6 +12505,20 @@ void RenderCharactersClient()
         {
             if (o->Visible)
             {
+                if (c == Hero)
+                {
+                    // Hero draw probe (C35), same env as the one per second in MoveCharactersClient: whether
+                    // the draw path was reached and which of its gates pass.
+                    static bool heroDrawnLogged = false;
+                    if (!heroDrawnLogged)
+                    {
+                        heroDrawnLogged = true;
+                        mu::log::Get("world")->info(
+                            "hero draw: reached 1 visible 1 actions {} parts {} shadow {} change {} alpha {:.3f}",
+                            Models[o->Type].NumActions, DrawsPlayerBodyParts(c, o), DrawsPlayerBodyShadow(c, o),
+                            c->Change, o->Alpha);
+                    }
+                }
                 if (i != SelectedCharacter && i != SelectedNpc)
                     RenderCharacter(c, o);
                 else
