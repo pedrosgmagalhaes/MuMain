@@ -12526,6 +12526,21 @@ void RenderCharactersClient()
                         o->BoundingBoxMin[2], o->BoundingBoxMax[0], o->BoundingBoxMax[1], o->BoundingBoxMax[2],
                         o->Position[0], o->Position[1], o->Position[2],
                         RequestTerrainHeight(o->Position[0], o->Position[1]), o->Kind);
+                    // Which mesh is which: the hidden index has to be a real one, and a mesh
+                    // without a texture draws as black shards when it is not hidden.
+                    for (int mesh = 0; mesh < model.NumMeshs; ++mesh)
+                    {
+                        const char* file = model.Textures[mesh].FileName;
+                        size_t length = 0;
+                        while (length < 32 && file[length] != '\0')
+                        {
+                            ++length;
+                        }
+                        mu::log::Get("world")->info(
+                            "monster mesh: monster {} mesh {} tris {} verts {} texture [{}]",
+                            static_cast<int>(c->MonsterIndex), mesh, model.Meshs[mesh].NumTriangles,
+                            model.Meshs[mesh].NumVertices, std::string_view(file, length));
+                    }
                 }
             }
         }
