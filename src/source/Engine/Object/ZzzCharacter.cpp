@@ -6554,6 +6554,7 @@ void MoveCharactersClient()
         to->Visible = TestFrustrum2D(to->Position[0] * 0.01f, to->Position[1] * 0.01f, -20.f);
     }
 
+#ifdef MU_ENABLE_CONTROL_SOCKET
     // Hero draw probe (C35): one line a second with everything that decides whether the player's own
     // character is drawn, so a map where the hero is missing says which of the three causes it is:
     // buried (pos z against terrain), culled (visible 0 / frustum2d 0) or transparent (alpha 0).
@@ -6573,6 +6574,7 @@ void MoveCharactersClient()
                 TestFrustrum2D(ho->Position[0] * 0.01f, ho->Position[1] * 0.01f, -20.f));
         }
     }
+#endif
 
     for (int i = 0; i < MAX_CHARACTERS_CLIENT; i++)
     {
@@ -12504,6 +12506,7 @@ void RenderCharactersClient()
         if (IsHiddenBySiegeCloak(c) || IsHiddenGameMaster(c))
             continue;
 
+#ifdef MU_ENABLE_CONTROL_SOCKET
         // Monster draw probe (C37): once per monster number of the map 91 set, what the draw resolves —
         // whether the character is drawn at all, which model slot it got and whether that model has
         // geometry (NumActions 0 means the BMD never loaded, and RenderCharacter returns right away).
@@ -12575,12 +12578,14 @@ void RenderCharactersClient()
                 }
             }
         }
+#endif
         if (o->Live)
         {
             if (o->Visible)
             {
                 if (c == Hero)
                 {
+#ifdef MU_ENABLE_CONTROL_SOCKET
                     // Hero draw probe (C35), same env as the one per second in MoveCharactersClient: whether
                     // the draw path was reached and which of its gates pass.
                     static bool heroDrawnLogged = false;
@@ -12592,6 +12597,7 @@ void RenderCharactersClient()
                             Models[o->Type].NumActions, DrawsPlayerBodyParts(c, o), DrawsPlayerBodyShadow(c, o),
                             c->Change, o->Alpha);
                     }
+#endif
                 }
                 if (i != SelectedCharacter && i != SelectedNpc)
                     RenderCharacter(c, o);
